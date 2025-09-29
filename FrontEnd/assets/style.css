@@ -3,19 +3,87 @@
    ======================= */
 /* http://meyerweb.com/eric/tools/css/reset/
    v2.0 | 20110126 | License: none (public domain) */
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -23,29 +91,76 @@ time, mark, audio, video {
 	font: inherit;
 	vertical-align: baseline;
 }
-article, aside, details, figcaption, figure,
-footer, header, hgroup, menu, nav, section { display: block; }
-body { line-height: 1; }
-ol, ul { list-style: none; }
-blockquote, q { quotes: none; }
-blockquote:before, blockquote:after, q:before, q:after { content: ''; content: none; }
-table { border-collapse: collapse; border-spacing: 0; }
+
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+	display: block;
+}
+
+body {
+	line-height: 1;
+}
+
+ol,
+ul {
+	list-style: none;
+}
+
+blockquote,
+q {
+	quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+	content: '';
+	content: none;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
 
 /* =======================
    BASE
    ======================= */
-html { box-sizing: border-box; }
-*, *::before, *::after { box-sizing: inherit; }
+html {
+	box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: inherit;
+}
 
 body {
 	max-width: 1140px;
 	margin: auto;
-	padding-inline: clamp(12px, 3vw, 24px); /* resp. safe gutters */
+	padding-inline: clamp(12px, 3vw, 24px);
+	/* resp. safe gutters */
 	font-family: 'Work Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 	font-size: 14px;
 	color: #111;
 }
-img { max-width: 100%; height: auto; display: block; }
+
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
 
 header {
 	display: flex;
@@ -55,9 +170,11 @@ header {
 	margin: 50px 0;
 }
 
-section { margin: 50px 0; }
+section {
+	margin: 50px 0;
+}
 
-h1{
+h1 {
 	display: flex;
 	flex-direction: column;
 	font-family: 'Syne';
@@ -65,12 +182,14 @@ h1{
 	font-weight: 800;
 	color: #B1663C;
 }
-h1 > span {
+
+h1>span {
 	font-family: 'Work Sans';
 	font-size: 10px;
 	letter-spacing: 0.1em;
 }
-h2{
+
+h2 {
 	font-family: 'Syne';
 	font-weight: 700;
 	font-size: 30px;
@@ -82,21 +201,81 @@ nav ul {
 	align-items: center;
 	gap: 16px;
 }
-nav li { padding: 0 10px; font-size: 1.2em; }
-li:hover { color: #B1663C; }
+
+nav li {
+	padding: 0 10px;
+	font-size: 1.2em;
+}
+
+li:hover {
+	color: #B1663C;
+}
 
 #introduction {
 	display: flex;
 	align-items: center;
 	gap: 32px;
 }
-#introduction figure { flex: 1; }
-#introduction img { margin: auto; width: 80%; }
-#introduction article { flex: 1; }
-#introduction h2 { margin-bottom: 1em; }
-#introduction p { margin-bottom: 0.5em; }
 
-#portfolio h2 { text-align: center; margin-bottom: 1em; }
+#introduction figure {
+	flex: 1;
+}
+
+#introduction img {
+	margin: auto;
+	width: 80%;
+}
+
+#introduction article {
+	flex: 1;
+}
+
+#introduction h2 {
+	margin-bottom: 1em;
+}
+
+#introduction p {
+	margin-bottom: 0.5em;
+}
+
+#portfolio h2 {
+	text-align: center;
+	margin-bottom: 1em;
+}
+
+/* ===== Filtres (menu de catégories) ===== */
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: center;
+	margin: 16px 0 28px;
+}
+
+.filter-btn {
+	appearance: none;
+	border: 2px solid #1D6154;
+	color: #1D6154;
+	background: #fff;
+	padding: 8px 16px;
+	border-radius: 24px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.filter-btn:hover,
+.filter-btn:focus-visible {
+	background: #1D6154;
+	color: #fff;
+	outline: none;
+}
+
+.filter-btn.active {
+	background: #1D6154;
+	color: #fff;
+}
+
 
 /* Grille galerie — desktop par défaut: 3 colonnes */
 .gallery {
@@ -106,9 +285,11 @@ li:hover { color: #B1663C; }
 	grid-column-gap: 20px;
 	grid-row-gap: 20px;
 }
+
 .gallery img {
 	width: 100%;
-	object-fit: cover; /* évite les étirements */
+	object-fit: cover;
+	/* évite les étirements */
 }
 
 /* Contact */
@@ -116,8 +297,15 @@ li:hover { color: #B1663C; }
 	width: 50%;
 	margin: auto;
 }
-#contact > * { text-align: center; }
-#contact h2 { margin-bottom: 20px; }
+
+#contact>* {
+	text-align: center;
+}
+
+#contact h2 {
+	margin-bottom: 20px;
+}
+
 #contact form {
 	text-align: left;
 	margin-top: 30px;
@@ -125,14 +313,23 @@ li:hover { color: #B1663C; }
 	flex-direction: column;
 	gap: 14px;
 }
+
 #contact input,
 #contact textarea {
 	border: none;
 	box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
 }
-#contact input { height: 50px; font-size: 1.2em; }
-#contact label { margin: 1em 0 .5em; }
-input[type="submit"]{
+
+#contact input {
+	height: 50px;
+	font-size: 1.2em;
+}
+
+#contact label {
+	margin: 1em 0 .5em;
+}
+
+input[type="submit"] {
 	font-family: 'Syne';
 	font-weight: 700;
 	color: #fff;
@@ -155,28 +352,50 @@ footer nav ul {
 
 /* --- Tablette ≤ 1024px --- */
 @media (max-width: 1024px) {
+
 	/* Typo un peu plus confortable */
-	body { font-size: 15px; }
+	body {
+		font-size: 15px;
+	}
 
 	/* Header plus compact */
-	header { margin: 36px 0; }
+	header {
+		margin: 36px 0;
+	}
 
 	/* Introduction passe en colonne */
-	#introduction { flex-direction: column; align-items: center; text-align: center; }
-	#introduction img { width: 90%; }
-	#introduction article { width: 100%; }
+	#introduction {
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+
+	#introduction img {
+		width: 90%;
+	}
+
+	#introduction article {
+		width: 100%;
+	}
 
 	/* Galerie: 2 colonnes */
-	.gallery { grid-template-columns: 1fr 1fr; }
+	.gallery {
+		grid-template-columns: 1fr 1fr;
+	}
 
 	/* Contact un peu plus large */
-	#contact { width: 70%; }
+	#contact {
+		width: 70%;
+	}
 }
 
 /* --- Mobile ≤ 768px --- */
 @media (max-width: 768px) {
+
 	/* Base */
-	body { font-size: 16px; }
+	body {
+		font-size: 16px;
+	}
 
 	/* Header en pile, centré */
 	header {
@@ -185,34 +404,75 @@ footer nav ul {
 		gap: 12px;
 		margin: 28px 0;
 	}
+
 	nav ul {
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: 12px;
 	}
-	nav li { padding: 6px 8px; font-size: 1em; }
+
+	nav li {
+		padding: 6px 8px;
+		font-size: 1em;
+	}
 
 	/* Titres centrés pour aérer */
-	h1, h2 { text-align: center; }
-	#portfolio h2 { margin-bottom: 0.75em; }
+	h1,
+	h2 {
+		text-align: center;
+	}
+
+	#portfolio h2 {
+		margin-bottom: 0.75em;
+	}
 
 	/* Introduction full width */
-	#introduction { gap: 20px; }
-	#introduction img { width: 100%; }
+	#introduction {
+		gap: 20px;
+	}
+
+	#introduction img {
+		width: 100%;
+	}
+
+	/* Filtres */
+	.filters {
+		gap: 10px;
+	}
+
+	.filter-btn {
+		padding: 8px 14px;
+	}
 
 	/* Galerie: 1 colonne */
-	.gallery { grid-template-columns: 1fr; grid-row-gap: 16px; }
+	.gallery {
+		grid-template-columns: 1fr;
+		grid-row-gap: 16px;
+	}
 
 	/* Contact pleine largeur */
-	#contact { width: 100%; }
-	#contact form { gap: 12px; }
+	#contact {
+		width: 100%;
+	}
+
+	#contact form {
+		gap: 12px;
+	}
 }
 
 /* --- Très petits écrans ≤ 480px (bonus) --- */
 @media (max-width: 480px) {
-	/* Gouttières un peu plus petites */
-	body { padding-inline: 12px; }
 
-	h2 { font-size: 24px; }
-	.gallery { grid-row-gap: 14px; }
+	/* Gouttières un peu plus petites */
+	body {
+		padding-inline: 12px;
+	}
+
+	h2 {
+		font-size: 24px;
+	}
+
+	.gallery {
+		grid-row-gap: 14px;
+	}
 }
