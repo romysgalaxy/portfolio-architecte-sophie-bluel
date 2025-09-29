@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Work+Sans&display=swap"
+		rel="stylesheet">
+  <title>Connexion – Sophie Bluel</title>
+  <link rel="stylesheet" href="./assets/style.css" />
+</head>
+<body class="login-bg">
+  <header>
+    <h1>
+      Sophie Bluel
+      <span>ARCHITECTE D’INTÉRIEUR</span>
+    </h1>
+
+    <nav>
+      <ul>
+        <li><a href="./index.html">projets</a></li>
+        <li><a href="./index.html#contact">contact</a></li>
+        <li><a class="is-active" href="./login.html">login</a></li>
+        <li><a aria-label="instagram" href="#">
+          <img src="./assets/icons/instagram.png" alt="" />
+        </a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="login" class="login">
+      <h2>Log In</h2>
+
+      <form class="login-form" novalidate>
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" autocomplete="username" required />
+
+        <label for="password">Mot de passe</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+
+        <button class="btn-primary" type="submit">Se connecter</button>
+
+        <p class="forgot"><a href="#" aria-disabled="true">Mot de passe oublié</a></p>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="#">Mentions légales</a></li>
+      </ul>
+    </nav>
+  </footer>
+</body>
+</html>

@@ -207,6 +207,31 @@ nav li {
 	font-size: 1.2em;
 }
 
+nav a {
+	font-weight: 400;
+}
+
+nav a.is-active {
+	font-weight: 700;
+	color: #1D6154;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+a:visited {
+	color: inherit;
+}
+
+a:hover,
+a:focus-visible {
+	color: #B1663C;
+	text-decoration: none;
+	outline: none;
+}
+
 li:hover {
 	color: #B1663C;
 }
@@ -346,6 +371,80 @@ footer nav ul {
 	margin: 2em;
 }
 
+/* ===== Page Login ===== */
+.login-bg {
+	background: #FFFEF8;
+}
+
+/* fond clair maquette */
+
+.login {
+	display: grid;
+	place-items: center;
+	min-height: calc(100vh - 220px);
+	/* plein écran hors header/footer */
+}
+
+.login h2 {
+	color: #1D6154;
+	text-align: center;
+	margin-bottom: 30px;
+}
+
+.login-form {
+	width: min(100%, 420px);
+	display: grid;
+	gap: 18px;
+}
+
+.login-form label {
+	font-weight: 600;
+	color: #3a3a3a;
+}
+
+.login-form input {
+	height: 48px;
+	font-size: 1rem;
+	padding: 0 14px;
+	border: none;
+	background: #fff;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, .09);
+}
+
+.btn-primary {
+	display: inline-block;
+	margin: 10px auto 0;
+	padding: 12px 28px;
+	border: none;
+	border-radius: 24px;
+	background: #1D6154;
+	color: #fff;
+	font-family: 'Syne';
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+	filter: brightness(0.95);
+}
+
+.forgot {
+	text-align: center;
+	margin-top: 12px;
+}
+
+.forgot a {
+	color: #2c6154;
+	text-decoration: underline;
+}
+
+/* nav actif */
+.is-active {
+	font-weight: 700;
+	color: #1D6154;
+}
+
 /* =======================
    RESPONSIVE
    ======================= */
@@ -457,6 +556,14 @@ footer nav ul {
 
 	#contact form {
 		gap: 12px;
+	}
+
+	.login {
+		min-height: calc(100vh - 180px);
+	}
+
+	header {
+		margin: 32px 0;
 	}
 }
 
