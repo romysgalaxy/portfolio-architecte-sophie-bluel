@@ -371,6 +371,13 @@ footer nav ul {
 	margin: 2em;
 }
 
+.form-error {
+	color: #b00020;
+	text-align: center;
+	margin-top: 8px;
+}
+
+
 /* ===== Page Login ===== */
 .login-bg {
 	background: #FFFEF8;
