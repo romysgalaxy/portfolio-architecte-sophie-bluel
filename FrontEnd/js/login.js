@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5678/api';
+const API = window.API_BASE;
 
 const form = document.getElementById('loginForm');
 const emailInput = document.getElementById('email');
@@ -27,7 +27,7 @@ form?.addEventListener('submit', async (e) => {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/users/login`, {
+    const res = await fetch(`${API}/users/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({ email, password })

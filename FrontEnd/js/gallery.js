@@ -1,5 +1,5 @@
 // --- Config ---
-const API = 'http://localhost:5678/api';
+const API = window.API_BASE;
 
 // --- Refs DOM ---
 const galleryEl = document.getElementById('gallery');
