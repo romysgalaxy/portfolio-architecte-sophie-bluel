@@ -265,7 +265,6 @@ li:hover {
 
 #portfolio h2 {
 	text-align: center;
-	margin-bottom: 1em;
 }
 
 /* ===== Filtres (menu de catégories) ===== */
@@ -452,22 +451,47 @@ footer nav ul {
 	color: #1D6154;
 }
 
-/* ===== Bouton Modifier ===== */
+/* Titre + bouton sur une seule ligne, centré */
+#portfolio .portfolio-header {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin: 5em 0;
+}
+
+/* Bouton noir (override de l'ancien .edit-btn) */
 .edit-btn {
-	margin: 8px auto 20px;
-	display: block;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
 	padding: 8px 14px;
 	border-radius: 20px;
-	border: 1px solid #1D6154;
+	border: 1px solid #000;
 	background: #fff;
-	color: #1D6154;
-	font-weight: 600;
+	color: #000;
 	cursor: pointer;
 }
 
-.edit-btn:hover {
-	background: #1D6154;
-	color: #fff;
+.edit-btn .icon {
+	width: 16px;
+	height: 16px;
+	display: block;
+}
+
+.edit-btn:hover,
+.edit-btn:focus-visible {
+	background: #e9e9e9;
+}
+
+/* Garde le gating admin */
+.admin-only {
+	display: none;
+}
+
+.is-admin .admin-only {
+	display: inline-flex;
 }
 
 /* ---- Gate admin ---- */
@@ -729,10 +753,6 @@ select,
 	h1,
 	h2 {
 		text-align: center;
-	}
-
-	#portfolio h2 {
-		margin-bottom: 0.75em;
 	}
 
 	/* Introduction full width */

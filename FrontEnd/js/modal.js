@@ -1,244 +1,326 @@
-const API = window.API_BASE;
-const token = localStorage.getItem('token');
-const openBtn = document.getElementById('openModalBtn');
 
-// Ne branche l’UI que pour un admin
-if (token && openBtn) {
-  openBtn.addEventListener('click', openModal);
-}
+(() => {
+  const API = window.API_BASE;
+  const openBtn = document.getElementById('openModalBtn');
 
-let overlay = null; // singleton
-
-function openModal() {
-  if (overlay) return;
-  overlay = buildModal();
-  document.body.appendChild(overlay);
-  document.body.style.overflow = 'hidden';
-  renderGalleryView(); // vue 1 par défaut
-}
-
-function closeModal() {
-  if (!overlay) return;
-  overlay.remove();
-  overlay = null;
-  document.body.style.overflow = '';
-  document.removeEventListener('keydown', onEsc);
-}
-
-function onEsc(e) { if (e.key === 'Escape') closeModal(); }
-
-function buildModal() {
-  const ov = document.createElement('div');
-  ov.className = 'modal-overlay';
-
-  const panel = document.createElement('div');
-  panel.className = 'modal-panel';
-  panel.setAttribute('role','dialog'); panel.setAttribute('aria-modal','true');
-
-  const close = document.createElement('button');
-  close.className = 'modal-close'; close.ariaLabel = 'Fermer'; close.textContent = '×';
-
-  const header = document.createElement('div');
-  header.className = 'modal-header';
-  header.innerHTML = `<h3 id="modal-title">Galerie photo</h3>`;
-
-  const body = document.createElement('div'); body.className = 'modal-body';
-  const footer = document.createElement('div'); footer.className = 'modal-footer';
-
-  const backBtn = document.createElement('button');
-  backBtn.className = 'btn btn-secondary'; backBtn.id = 'modalBack';
-  backBtn.textContent = '← Retour'; backBtn.hidden = true;
-
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'btn btn-primary'; nextBtn.id = 'modalNext';
-  nextBtn.textContent = 'Ajouter une photo';
-
-  footer.append(backBtn, nextBtn);
-  panel.append(close, header, body, footer);
-  ov.append(panel);
-
-  // Fermeture
-  close.addEventListener('click', closeModal);
-  ov.addEventListener('click', (e) => { if (e.target === ov) closeModal(); });
-  document.addEventListener('keydown', onEsc);
-
-  // Navigation
-  nextBtn.addEventListener('click', renderUploadView);
-  backBtn.addEventListener('click', renderGalleryView);
-
-  ov.$ = { body, backBtn, nextBtn, title: header.querySelector('#modal-title') };
-  return ov;
-}
-
-// ---------------- Vue 1: Galerie photo + DELETE ----------------
-async function renderGalleryView() {
-  if (!overlay) return;
-  const { body, backBtn, nextBtn, title } = overlay.$;
-  title.textContent = 'Galerie photo';
-  backBtn.hidden = true; nextBtn.hidden = false;
-
-  body.innerHTML = `<div class="modal-grid" id="modalGrid">Chargement…</div>`;
-  const grid = body.querySelector('#modalGrid');
-
-  try {
-    const res = await fetch(`${API}/works`);
-    const works = await res.json();
-    grid.innerHTML = '';
-
-    works.forEach((w) => {
-      const fig = document.createElement('figure');
-      fig.innerHTML = `
-        <img src="${w.imageUrl}" alt="${w.title}">
-        <figcaption>${w.title || ''}</figcaption>
-      `;
-
-      // Bouton suppression (admin only)
-      const del = document.createElement('button');
-      del.className = 'del'; del.title = 'Supprimer';
-      del.innerHTML = '🗑';
-      del.addEventListener('click', async (e) => {
-        e.preventDefault(); e.stopPropagation();
-        if (!confirm('Supprimer ce média ?')) return;
-        try {
-          const r = await fetch(`${API}/works/${w.id}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (!r.ok) throw new Error('DELETE ' + r.status);
-          fig.remove();                 // retire du mode modale
-          await reloadMainGallery();    // MAJ de la galerie principale
-        } catch (err) {
-          console.error(err);
-          alert("Suppression impossible.");
-        }
-      });
-
-      fig.appendChild(del);
-      grid.appendChild(fig);
-    });
-  } catch (e) {
-    grid.textContent = 'Impossible de charger la galerie.';
-  }
-}
-
-// ---------------- Vue 2: Ajout photo + POST ----------------
-function renderUploadView() {
-  if (!overlay) return;
-  const { body, backBtn, nextBtn, title } = overlay.$;
-  title.textContent = 'Ajout photo';
-  backBtn.hidden = false; nextBtn.hidden = true;
-
-  body.innerHTML = `
-    <form id="uploadForm">
-      <div class="dropzone">
-        <img class="preview" id="previewImg" alt="">
-        <input id="fileInput" name="image" type="file" accept="image/*" hidden>
-        <button class="pick" type="button" id="pickBtn">+ Ajouter une photo</button>
-        <p>jpg, png • 4 Mo max</p>
-      </div>
-
-      <div class="form-row">
-        <label for="titleInput">Titre</label>
-        <input id="titleInput" name="title" type="text" required>
-      </div>
-
-      <div class="form-row">
-        <label for="catSelect">Catégorie</label>
-        <select id="catSelect" name="category" required>
-          <option value="" disabled selected>Choisir…</option>
-        </select>
-      </div>
-
-      <div class="form-row" style="text-align:center; margin-top:16px;">
-        <button id="submitBtn" class="btn btn-primary" type="submit" disabled>Valider</button>
-      </div>
-    </form>
-  `;
-
-  fillCategories();
-
-  const fileInput = body.querySelector('#fileInput');
-  const pickBtn   = body.querySelector('#pickBtn');
-  const preview   = body.querySelector('#previewImg');
-  const titleIn   = body.querySelector('#titleInput');
-  const catSel    = body.querySelector('#catSelect');
-  const submitBtn = body.querySelector('#submitBtn');
-  const form      = body.querySelector('#uploadForm');
-
-  const updateState = () => {
-    submitBtn.disabled = !(fileInput.files?.[0] && titleIn.value.trim() && catSel.value);
-    preview.style.display = fileInput.files?.[0] ? 'block' : 'none';
-  };
-
-  pickBtn.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => {
-    const f = fileInput.files?.[0];
-    if (!f) return updateState();
-    if (f.size > 4 * 1024 * 1024) { alert('Fichier > 4 Mo'); fileInput.value = ''; return updateState(); }
-    preview.src = URL.createObjectURL(f);
-    updateState();
+  // Ouvrir (ou rediriger vers login si pas connecté)
+  openBtn?.addEventListener('click', () => {
+    if (!localStorage.getItem('token')) { location.href = './login.html'; return; }
+    openModal();
   });
-  titleIn.addEventListener('input', updateState);
-  catSel.addEventListener('change', updateState);
 
-  // Envoi POST réel
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const f = fileInput.files?.[0];
-    if (!f) return;
+  let overlay = null;      // singleton de la modale
+  let previewURL = null;   // pour révoquer l’URL de la preview
 
-    const fd = new FormData();
-    fd.append('image', f);
-    fd.append('title', titleIn.value.trim());
-    fd.append('category', catSel.value);
+  function openModal() {
+    if (overlay) return;
+    overlay = buildModal();
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    renderGalleryView(); // vue 1 par défaut
+  }
+
+  function closeModal() {
+    if (!overlay) return;
+    if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
+    overlay.remove();
+    overlay = null;
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', onEsc);
+  }
+
+  function onEsc(e) { if (e.key === 'Escape') closeModal(); }
+
+  function buildModal() {
+    const ov = document.createElement('div');
+    ov.className = 'modal-overlay';
+
+    const panel = document.createElement('div');
+    panel.className = 'modal-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('tabindex', '-1');
+
+    const close = document.createElement('button');
+    close.className = 'modal-close';
+    close.ariaLabel = 'Fermer';
+    close.textContent = '×';
+
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    header.innerHTML = `<h3 id="modal-title">Galerie photo</h3>`;
+
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+
+    const footer = document.createElement('div');
+    footer.className = 'modal-footer';
+
+    const backBtn = document.createElement('button');
+    backBtn.className = 'btn btn-secondary';
+    backBtn.id = 'modalBack';
+    backBtn.textContent = '← Retour';
+    backBtn.hidden = true;
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'btn btn-primary';
+    nextBtn.id = 'modalNext';
+    nextBtn.textContent = 'Ajouter une photo';
+
+    footer.append(backBtn, nextBtn);
+    panel.append(close, header, body, footer);
+    ov.append(panel);
+
+    // Fermetures
+    close.addEventListener('click', closeModal);
+    ov.addEventListener('click', (e) => { if (e.target === ov) closeModal(); });
+    document.addEventListener('keydown', onEsc);
+
+    // Navigation
+    nextBtn.addEventListener('click', renderUploadView);
+    backBtn.addEventListener('click', renderGalleryView);
+
+    // Focus accessible
+    queueMicrotask(() => panel.focus());
+
+    // Expose refs
+    ov.$ = { panel, title: header.querySelector('#modal-title'), body, backBtn, nextBtn };
+    return ov;
+  }
+
+  // ========== Vue 1 : Galerie (miniatures + icône poubelle) ==========
+  async function renderGalleryView() {
+    if (!overlay) return;
+    const { body, backBtn, nextBtn, title } = overlay.$;
+
+    title.textContent = 'Galerie photo';
+    backBtn.hidden = true;
+    nextBtn.hidden = false;
+
+    body.innerHTML = `<div class="modal-grid" id="modalGrid">Chargement…</div>`;
+    const grid = body.querySelector('#modalGrid');
 
     try {
-      const r = await fetch(`${API}/works`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd
+      const res = await fetch(`${API}/works`, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const works = await res.json();
+
+      grid.innerHTML = '';
+      works.forEach((w) => {
+        const fig = document.createElement('figure');
+        fig.innerHTML = `
+          <img src="${w.imageUrl}" alt="${w.title || ''}">
+          <figcaption>${w.title || ''}</figcaption>
+          <button class="del" type="button" aria-label="Supprimer">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path fill="currentColor"
+                d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1zm1 2h4V5h-4zM7 7v12h10V7H7zm3 2h2v8h-2V9zm4 0h2v8h-2V9z"/>
+            </svg>
+          </button>
+        `;
+
+        // Suppression
+        const delBtn = fig.querySelector('.del');
+        delBtn.addEventListener('click', async (e) => {
+          e.preventDefault(); e.stopPropagation();
+          if (!confirm('Supprimer ce média ?')) return;
+          try {
+            const r = await fetch(`${API}/works/${w.id}`, {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (!r.ok) throw new Error('DELETE ' + r.status);
+
+            fig.remove();
+            await reloadMainGallery();
+
+            // Notifie les filtres de la suppression
+            document.dispatchEvent(new CustomEvent('works:delete', { detail: { id: w.id } }));
+            // Fallback : si tu as une fonction globale côté gallery.js
+            if (typeof window.refreshWorksStateFromApi === 'function') window.refreshWorksStateFromApi();
+            // Ou notification générique
+            document.dispatchEvent(new CustomEvent('works:refresh'));
+          } catch (err) {
+            console.error(err);
+            alert("Suppression impossible.");
+          }
+        });
+
+        grid.appendChild(fig);
       });
-      if (!r.ok) throw new Error('POST ' + r.status);
-
-      // MAJ UI
-      await reloadMainGallery(); // rafraîchit la galerie sur la page
-      alert('Photo ajoutée ✅');
-      renderGalleryView();       // retour à la vue 1
-    } catch (err) {
-      console.error(err);
-      alert("Impossible d'ajouter la photo.");
+    } catch (e) {
+      console.error('[modal] works failed:', e);
+      grid.textContent = 'Impossible de charger la galerie.';
     }
-  });
-}
-
-async function fillCategories() {
-  try {
-    const res = await fetch(`${API}/categories`);
-    const cats = await res.json();
-    const sel = overlay.$.body.querySelector('#catSelect');
-    sel.insertAdjacentHTML('beforeend',
-      cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
-    );
-  } catch (e) { /* ignore */ }
-}
-
-// -------- MAJ de la galerie principale (sans recharger la page) --------
-async function reloadMainGallery() {
-  const galleryEl = document.getElementById('gallery');
-  if (!galleryEl) return;
-  try {
-    const res = await fetch(`${API}/works`);
-    const works = await res.json();
-
-    const frag = document.createDocumentFragment();
-    works.forEach(w => {
-      const fig = document.createElement('figure');
-      fig.innerHTML = `<img src="${w.imageUrl}" alt="${w.title || ''}">
-                       <figcaption>${w.title || ''}</figcaption>`;
-      frag.appendChild(fig);
-    });
-    galleryEl.replaceChildren(frag);
-  } catch (e) {
-    console.error('refresh gallery failed', e);
   }
-}
+
+  // ========== Vue 2 : Ajout (validation + POST) ==========
+  function renderUploadView() {
+    if (!overlay) return;
+    const { body, backBtn, nextBtn, title } = overlay.$;
+
+    title.textContent = 'Ajout photo';
+    backBtn.hidden = false;
+    nextBtn.hidden = true;
+
+    body.innerHTML = `
+      <form id="uploadForm" novalidate>
+        <div class="dropzone">
+          <img class="preview" id="previewImg" alt="">
+          <input id="fileInput" name="image" type="file" accept="image/png,image/jpeg" hidden>
+          <button class="pick" type="button" id="pickBtn">+ Ajouter une photo</button>
+          <p>jpg, png • 4 Mo max</p>
+        </div>
+
+        <div class="form-row">
+          <label for="titleInput">Titre</label>
+          <input id="titleInput" name="title" type="text" required>
+        </div>
+
+        <div class="form-row">
+          <label for="catSelect">Catégorie</label>
+          <select id="catSelect" name="category" required>
+            <option value="" disabled selected>Choisir…</option>
+          </select>
+        </div>
+
+        <p id="uploadError" class="form-error" role="alert" hidden></p>
+
+        <div class="form-row" style="text-align:center; margin-top:16px;">
+          <button id="submitBtn" class="btn btn-primary" type="submit" disabled>Valider</button>
+        </div>
+      </form>
+    `;
+
+    fillCategories();
+
+    const form      = body.querySelector('#uploadForm');
+    const fileInput = body.querySelector('#fileInput');
+    const pickBtn   = body.querySelector('#pickBtn');
+    const preview   = body.querySelector('#previewImg');
+    const titleIn   = body.querySelector('#titleInput');
+    const catSel    = body.querySelector('#catSelect');
+    const submitBtn = body.querySelector('#submitBtn');
+    const errorBox  = body.querySelector('#uploadError');
+
+    const showErr = (msg) => { errorBox.textContent = msg; errorBox.hidden = !msg; };
+    const clearErr = () => showErr('');
+
+    const isValidImage = (f) => !!f && ['image/jpeg','image/png'].includes(f.type) && f.size <= 4*1024*1024;
+
+    const updateState = () => {
+      const ok = isValidImage(fileInput.files?.[0]) && titleIn.value.trim() && catSel.value;
+      submitBtn.disabled = !ok;
+      if (fileInput.files?.[0]) {
+        if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
+        previewURL = URL.createObjectURL(fileInput.files[0]);
+        preview.src = previewURL;
+        preview.style.display = 'block';
+      } else {
+        if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
+        preview.removeAttribute('src');
+        preview.style.display = 'none';
+      }
+    };
+
+    pickBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files?.[0];
+      if (!f) { updateState(); return; }
+      if (f.size > 4*1024*1024) { fileInput.value=''; showErr('Image trop lourde (> 4 Mo).'); updateState(); return; }
+      if (!['image/jpeg','image/png'].includes(f.type)) { fileInput.value=''; showErr('Formats autorisés : JPG ou PNG.'); updateState(); return; }
+      clearErr(); updateState();
+    });
+    titleIn.addEventListener('input', () => { clearErr(); updateState(); });
+    catSel.addEventListener('change', () => { clearErr(); updateState(); });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErr();
+
+      const f = fileInput.files?.[0];
+      const titleVal = titleIn.value.trim();
+      const catVal = catSel.value;
+
+      if (!isValidImage(f)) return showErr('Choisis une image JPG/PNG ≤ 4 Mo.');
+      if (!titleVal) return showErr('Le titre est obligatoire.');
+      if (!catVal) return showErr('Choisis une catégorie.');
+
+      const fd = new FormData();
+      fd.append('image', f);
+      fd.append('title', titleVal);
+      fd.append('category', catVal);
+
+      try {
+        const r = await fetch(`${API}/works`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          body: fd
+        });
+        if (!r.ok) {
+          if (r.status === 400) return showErr('Formulaire incomplet.');
+          if (r.status === 401) return showErr('Non autorisé (token manquant/expiré).');
+          throw new Error('HTTP ' + r.status);
+        }
+
+        const created = await r.json(); // objet créé (id, title, imageUrl, categoryId...)
+
+        await reloadMainGallery();
+
+        // Notifie les filtres de l’ajout
+        document.dispatchEvent(new CustomEvent('works:append', { detail: { work: created } }));
+        // Fallback : si tu as une fonction globale côté gallery.js
+        if (typeof window.refreshWorksStateFromApi === 'function') window.refreshWorksStateFromApi();
+        // Ou notification générique
+        document.dispatchEvent(new CustomEvent('works:refresh'));
+
+        // Reset + retour
+        form.reset();
+        updateState();
+        renderGalleryView();
+      } catch (err) {
+        console.error('[modal] POST /works failed', err);
+        showErr("Échec de l'envoi. Réessaie.");
+      }
+    });
+
+    // État initial
+    updateState();
+  }
+
+  async function fillCategories() {
+    try {
+      const res = await fetch(`${API}/categories`, { headers: { Accept: 'application/json' }});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const cats = await res.json();
+      const sel = overlay.$.body.querySelector('#catSelect');
+      sel.insertAdjacentHTML('beforeend',
+        cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+      );
+    } catch (e) {
+      console.error('[modal] categories failed:', e);
+    }
+  }
+
+  // Rafraîchit la galerie principale (#gallery)
+  async function reloadMainGallery() {
+    const galleryEl = document.getElementById('gallery');
+    if (!galleryEl) return;
+    try {
+      const res = await fetch(`${API}/works`, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const works = await res.json();
+
+      const frag = document.createDocumentFragment();
+      works.forEach(w => {
+        const fig = document.createElement('figure');
+        fig.innerHTML = `<img src="${w.imageUrl}" alt="${w.title || ''}">
+                         <figcaption>${w.title || ''}</figcaption>`;
+        frag.appendChild(fig);
+      });
+      galleryEl.replaceChildren(frag);
+    } catch (e) {
+      console.error('[modal] refresh main gallery failed:', e);
+    }
+  }
+})();

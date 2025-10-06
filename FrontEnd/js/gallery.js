@@ -111,3 +111,32 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// --- Mises à jour cross-modules (provenant de la modale) ---
+document.addEventListener('works:append', (e) => {
+  const w = e.detail.work;               // objet complet retourné par l'API après POST
+  WORKS.push(w);
+  CATS = deriveCategoriesFromWorks(WORKS);
+  renderMenu();
+  renderGallery();
+});
+
+document.addEventListener('works:delete', (e) => {
+  const id = e.detail.id;                // id du work supprimé
+  WORKS = WORKS.filter(w => w.id !== id);
+  CATS = deriveCategoriesFromWorks(WORKS);
+  renderMenu();
+  renderGallery();
+});
+
+// (optionnel) refresh total depuis l'API si besoin ailleurs
+document.addEventListener('works:refresh', async () => {
+  try {
+    const res = await fetch(`${API}/works`);
+    WORKS = await res.json();
+    CATS = deriveCategoriesFromWorks(WORKS);
+    renderMenu();
+    renderGallery();
+  } catch (_) {}
+});
+
