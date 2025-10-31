@@ -1,4 +1,3 @@
-
 (() => {
   const API = window.API_BASE;
   const openBtn = document.getElementById('openModalBtn');
@@ -67,6 +66,7 @@
     nextBtn.id = 'modalNext';
     nextBtn.textContent = 'Ajouter une photo';
 
+    // Par défaut on met les deux, on ajustera par vue
     footer.append(backBtn, nextBtn);
     panel.append(close, header, body, footer);
     ov.append(panel);
@@ -84,18 +84,26 @@
     queueMicrotask(() => panel.focus());
 
     // Expose refs
-    ov.$ = { panel, title: header.querySelector('#modal-title'), body, backBtn, nextBtn };
+    ov.$ = {
+      panel,
+      title: header.querySelector('#modal-title'),
+      body,
+      footer,
+      backBtn,
+      nextBtn
+    };
     return ov;
   }
 
   // ========== Vue 1 : Galerie (miniatures + icône poubelle) ==========
   async function renderGalleryView() {
     if (!overlay) return;
-    const { body, backBtn, nextBtn, title } = overlay.$;
+    const { body, backBtn, nextBtn, title, footer } = overlay.$;
 
     title.textContent = 'Galerie photo';
     backBtn.hidden = true;
     nextBtn.hidden = false;
+    footer.replaceChildren(nextBtn); 
 
     body.innerHTML = `<div class="modal-grid" id="modalGrid">Chargement…</div>`;
     const grid = body.querySelector('#modalGrid');
@@ -136,9 +144,7 @@
 
             // Notifie les filtres de la suppression
             document.dispatchEvent(new CustomEvent('works:delete', { detail: { id: w.id } }));
-            // Fallback : si tu as une fonction globale côté gallery.js
             if (typeof window.refreshWorksStateFromApi === 'function') window.refreshWorksStateFromApi();
-            // Ou notification générique
             document.dispatchEvent(new CustomEvent('works:refresh'));
           } catch (err) {
             console.error(err);
@@ -157,10 +163,11 @@
   // ========== Vue 2 : Ajout (validation + POST) ==========
   function renderUploadView() {
     if (!overlay) return;
-    const { body, backBtn, nextBtn, title } = overlay.$;
+    const { body, backBtn, nextBtn, title, footer } = overlay.$;
 
     title.textContent = 'Ajout photo';
-    backBtn.hidden = false;
+
+    backBtn.hidden = true;
     nextBtn.hidden = true;
 
     body.innerHTML = `
@@ -185,12 +192,17 @@
         </div>
 
         <p id="uploadError" class="form-error" role="alert" hidden></p>
-
-        <div class="form-row" style="text-align:center; margin-top:16px;">
-          <button id="submitBtn" class="btn btn-primary" type="submit" disabled>Valider</button>
-        </div>
       </form>
     `;
+
+    // Crée le bouton "Valider" dans le footer, relié au formulaire via l'attribut form
+    const submitBtn = document.createElement('button');
+    submitBtn.id = 'submitBtn';
+    submitBtn.className = 'btn btn-primary';
+    submitBtn.type = 'submit';
+    submitBtn.setAttribute('form', 'uploadForm');
+    submitBtn.textContent = 'Valider';
+    footer.replaceChildren(submitBtn); // ⬅️ le footer n'a plus que "Valider"
 
     fillCategories();
 
@@ -200,7 +212,6 @@
     const preview   = body.querySelector('#previewImg');
     const titleIn   = body.querySelector('#titleInput');
     const catSel    = body.querySelector('#catSelect');
-    const submitBtn = body.querySelector('#submitBtn');
     const errorBox  = body.querySelector('#uploadError');
 
     const showErr = (msg) => { errorBox.textContent = msg; errorBox.hidden = !msg; };
@@ -263,15 +274,13 @@
           throw new Error('HTTP ' + r.status);
         }
 
-        const created = await r.json(); // objet créé (id, title, imageUrl, categoryId...)
+        const created = await r.json();
 
         await reloadMainGallery();
 
         // Notifie les filtres de l’ajout
         document.dispatchEvent(new CustomEvent('works:append', { detail: { work: created } }));
-        // Fallback : si tu as une fonction globale côté gallery.js
         if (typeof window.refreshWorksStateFromApi === 'function') window.refreshWorksStateFromApi();
-        // Ou notification générique
         document.dispatchEvent(new CustomEvent('works:refresh'));
 
         // Reset + retour
