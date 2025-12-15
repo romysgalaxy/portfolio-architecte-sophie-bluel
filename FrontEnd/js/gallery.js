@@ -1,169 +1,224 @@
-// --- Config ---
-// URL de base de l'API, injectée dans window (ex : http://localhost:5678/api)
-const API = window.API_BASE;
+export function initGallery() {
+  // 1) URL de base de l'API
+  var API = window.API_BASE;
 
-// --- Refs DOM ---
-// Conteneur de la galerie principale (où on affiche les travaux)
-const galleryEl = document.getElementById('gallery');
-// Conteneur du menu de filtres (boutons de catégories)
-const menuEl = document.getElementById('categoryMenu');
+  // 2) Éléments HTML
+  var galleryEl = document.getElementById("gallery");
+  var menuEl = document.getElementById("categoryMenu");
 
-// --- État ---
-// Tableau de tous les travaux récupérés depuis l'API
-let WORKS = [];
-// Tableau des catégories (dérivées des travaux)
-let CATS = [];
-// ID de la catégorie sélectionnée (0 = afficher tous les travaux)
-let currentCatId = 0; // 0 = Tous
+  // 3) Données en mémoire
+  var works = [];        // tous les projets
+  var categories = [];   // catégories trouvées
+  var currentCategoryId = 0; // 0 = Tous
 
-// --- Helpers ---
-// Affiche la galerie en fonction de la catégorie actuelle (currentCatId)
-function renderGallery() {
-  // Si une catégorie est sélectionnée, on filtre WORKS, sinon on prend tout
-  const list = currentCatId
-    ? WORKS.filter(w => (w.category?.id ?? w.categoryId) === currentCatId)
-    : WORKS;
 
-  // On reconstruit complètement le contenu de la galerie
-  const frag = document.createDocumentFragment();
-  list.forEach(w => {
-    const fig = document.createElement('figure');
-    const img = document.createElement('img');
-    const cap = document.createElement('figcaption');
-    img.src = w.imageUrl;
-    img.alt = w.title || '';
-    cap.textContent = w.title || '';
-    fig.append(img, cap);
-    frag.appendChild(fig);
-  });
+  // =======================
+  // AFFICHER LA GALERIE
+  // =======================
+  function showGallery() {
+    // On vide la galerie
+    galleryEl.innerHTML = "";
 
-  // Remplace tout le contenu de #gallery par la nouvelle liste
-  galleryEl.replaceChildren(frag);
-}
+    // On parcourt tous les works
+    for (var i = 0; i < works.length; i++) {
+      var work = works[i];
 
-// Construit dynamiquement le menu des filtres (boutons de catégories)
-function renderMenu() {
-  const frag = document.createDocumentFragment();
+      // On récupère l'id de catégorie du work
+      var workCategoryId = 0;
 
-  // Bouton "Tous" (catégorie spéciale avec id 0)
-  const allBtn = document.createElement('button');
-  allBtn.className = 'filter-btn' + (currentCatId === 0 ? ' active' : '');
-  allBtn.dataset.cat = '0';
-  allBtn.type = 'button';
-  allBtn.textContent = 'Tous';
-  frag.appendChild(allBtn);
+      // Certains works ont work.category.id
+      if (work.category && work.category.id) {
+        workCategoryId = work.category.id;
+      }
 
-  // Boutons des catégories réelles (issues de CATS)
-  CATS.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (currentCatId === c.id ? ' active' : '');
-    btn.dataset.cat = String(c.id); // on stocke l'id dans data-cat
-    btn.type = 'button';
-    btn.textContent = c.name;
-    frag.appendChild(btn);
-  });
+      // D'autres works ont work.categoryId
+      if (work.categoryId) {
+        workCategoryId = work.categoryId;
+      }
 
-  // On remplace tout le contenu du menu par la nouvelle liste de boutons
-  menuEl.replaceChildren(frag);
-}
+      // Si on n'est pas sur "Tous" et que la catégorie ne correspond pas => on ignore ce work
+      if (currentCategoryId !== 0 && workCategoryId !== currentCategoryId) {
+        continue;
+      }
 
-// Dédoublonne les catégories à partir de la liste des travaux
-// → permet d'éviter un deuxième appel à /categories
-function deriveCategoriesFromWorks(works) {
-  const map = new Map(); // id → { id, name }
-  for (const w of works) {
-    // Compatibilité : certains objets ont w.category.id, d'autres w.categoryId
-    const id = w.category?.id ?? w.categoryId;
-    const name = w.category?.name ?? '';
-    if (!id || !name) continue;   // on ignore les données incomplètes
-    if (!map.has(id)) map.set(id, { id, name });
+      // Création du HTML : figure -> img + figcaption
+      var figure = document.createElement("figure");
+
+      var img = document.createElement("img");
+      img.src = work.imageUrl;
+      img.alt = work.title;
+
+      var caption = document.createElement("figcaption");
+      caption.textContent = work.title;
+
+      figure.appendChild(img);
+      figure.appendChild(caption);
+
+      galleryEl.appendChild(figure);
+    }
   }
-  // On retourne un tableau trié par nom de catégorie (ordre alpha FR)
-  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-}
 
-// (Option) Appel direct à l'API des catégories si on veut les récupérer séparément
-async function fetchCategoriesFromApi() {
-  const res = await fetch(`${API}/categories`);
-  if (!res.ok) throw new Error('GET /categories ' + res.status);
-  return res.json(); // retourne une promesse de [{id,name}]
-}
 
-// Point d'entrée principal : initialisation de la page
-async function init() {
-  try {
-    // 1) Récupère les travaux depuis l'API
-    const worksRes = await fetch(`${API}/works`, { headers: { Accept: 'application/json' } });
-    if (!worksRes.ok) throw new Error('GET /works ' + worksRes.status);
-    WORKS = await worksRes.json();
+  // =======================
+  // AFFICHER LE MENU
+  // =======================
+  function showMenu() {
+    // On vide le menu
+    menuEl.innerHTML = "";
 
-    // 2) Dérive les catégories à partir des travaux
-    CATS = deriveCategoriesFromWorks(WORKS);
+    // Bouton "Tous"
+    var allButton = document.createElement("button");
+    allButton.type = "button";
+    allButton.className = "filter-btn";
+    allButton.textContent = "Tous";
+    allButton.setAttribute("data-cat", "0");
+    menuEl.appendChild(allButton);
 
-    // 3) Premier affichage : menu + galerie complète
-    renderMenu();
-    renderGallery();
+    // Boutons des catégories
+    for (var i = 0; i < categories.length; i++) {
+      var cat = categories[i];
 
-    // 4) Gestion des clics sur les filtres (délégation d'évènement)
-    menuEl.addEventListener('click', (e) => {
-      // On cherche le bouton ".filter-btn" le plus proche de la cible
-      const btn = e.target.closest('button.filter-btn');
-      if (!btn) return; // clic en dehors d'un bouton
-      const id = Number(btn.dataset.cat); // récupère l'id de catégorie à partir du data-attribute
-      if (Number.isNaN(id)) return;
-      currentCatId = id; // met à jour la catégorie active
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "filter-btn";
+      btn.textContent = cat.name;
+      btn.setAttribute("data-cat", String(cat.id));
 
-      // Met à jour la classe "active" sur tous les boutons
-      [...menuEl.querySelectorAll('.filter-btn')]
-        .forEach(b => b.classList.toggle('active', Number(b.dataset.cat) === id));
+      menuEl.appendChild(btn);
+    }
 
-      // Réaffiche la galerie filtrée
-      renderGallery();
+    // Met à jour le bouton actif
+    updateActiveButton();
+  }
+
+
+  // =======================
+  // BOUTON ACTIF (CSS)
+  // =======================
+  function updateActiveButton() {
+    var buttons = menuEl.querySelectorAll(".filter-btn");
+
+    for (var i = 0; i < buttons.length; i++) {
+      var b = buttons[i];
+      var id = Number(b.getAttribute("data-cat"));
+
+      if (id === currentCategoryId) {
+        b.classList.add("active");
+      } else {
+        b.classList.remove("active");
+      }
+    }
+  }
+
+
+  // =======================
+  // CRÉER LA LISTE DES CATÉGORIES
+  // (sans Map, très simple)
+  // =======================
+  function buildCategoriesFromWorks() {
+    categories = [];
+
+    for (var i = 0; i < works.length; i++) {
+      var work = works[i];
+
+      var id = 0;
+      var name = "";
+
+      if (work.category && work.category.id && work.category.name) {
+        id = work.category.id;
+        name = work.category.name;
+      } else if (work.categoryId) {
+        // si on n'a pas le nom, on ne peut pas créer une catégorie propre
+        // (donc on ignore)
+        continue;
+      } else {
+        continue;
+      }
+
+      // Vérifie si la catégorie existe déjà dans categories
+      var exists = false;
+      for (var j = 0; j < categories.length; j++) {
+        if (categories[j].id === id) {
+          exists = true;
+        }
+      }
+
+      // Si elle n'existe pas, on l'ajoute
+      if (exists === false) {
+        categories.push({ id: id, name: name });
+      }
+    }
+  }
+
+
+  // =======================
+  // AFFICHER UNE ERREUR UTILISATEUR
+  // =======================
+  function showUserError(message) {
+    // Tu peux personnaliser : ici on met un texte simple dans le menu et la galerie
+    menuEl.textContent = message;
+    galleryEl.textContent = message;
+  }
+
+
+  // =======================
+  // INIT : CHARGER LES WORKS
+  // =======================
+  function init() {
+    // Appel API : GET /works
+    fetch(API + "/works")
+      .then(function (response) {
+        if (response.ok === false) {
+          showUserError("Impossible de charger la galerie (erreur " + response.status + ").");
+          return null;
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (data === null) {
+          return;
+        }
+
+        works = data;
+
+        // Crée les catégories depuis les works
+        buildCategoriesFromWorks();
+
+        // Affiche menu + galerie
+        showMenu();
+        showGallery();
+      })
+      .catch(function (error) {
+        console.error(error);
+        showUserError("Impossible de charger la galerie. Vérifie le serveur.");
+      });
+
+    // Gestion du clic sur les boutons du menu (délégation)
+    menuEl.addEventListener("click", function (event) {
+      var target = event.target;
+
+      // On vérifie que c'est un bouton
+      if (target.tagName !== "BUTTON") {
+        return;
+      }
+
+      // Récupère la catégorie du bouton
+      var id = Number(target.getAttribute("data-cat"));
+      if (isNaN(id)) {
+        return;
+      }
+
+      // Met à jour la catégorie sélectionnée
+      currentCategoryId = id;
+
+      // Met à jour le bouton actif + galerie
+      updateActiveButton();
+      showGallery();
     });
-
-  } catch (err) {
-    // En cas d'erreur (API KO, etc.), on affiche un message dans le DOM
-    console.error(err);
-    menuEl.textContent = 'Impossible de charger les catégories.';
-    galleryEl.textContent = 'Impossible de charger la galerie.';
   }
+
+
+  // Lance init quand la page est chargée
+  document.addEventListener("DOMContentLoaded", init);
 }
-
-// Lance init() une fois que le DOM est prêt
-document.addEventListener('DOMContentLoaded', init);
-
-// --- Mises à jour cross-modules (provenant de la modale) ---
-// Ces events sont dispatchés par la modale quand on ajoute/supprime des travaux
-
-// Quand un nouveau travail est créé via la modale
-document.addEventListener('works:append', (e) => {
-  const w = e.detail.work; // objet complet retourné par l'API après POST
-  WORKS.push(w);           // on l'ajoute dans l'état local
-  CATS = deriveCategoriesFromWorks(WORKS); // on recalcule les catégories
-  renderMenu();            // on met à jour les filtres
-  renderGallery();         // on met à jour la galerie
-});
-
-// Quand un travail est supprimé via la modale
-document.addEventListener('works:delete', (e) => {
-  const id = e.detail.id;  // id du work supprimé
-  // On filtre WORKS pour retirer l'élément supprimé
-  WORKS = WORKS.filter(w => w.id !== id);
-  CATS = deriveCategoriesFromWorks(WORKS);
-  renderMenu();
-  renderGallery();
-});
-
-// (optionnel) refresh total depuis l'API si besoin ailleurs
-// Permet à un autre module de redemander un "full reload" de WORKS/CATS
-document.addEventListener('works:refresh', async () => {
-  try {
-    const res = await fetch(`${API}/works`);
-    WORKS = await res.json();
-    CATS = deriveCategoriesFromWorks(WORKS);
-    renderMenu();
-    renderGallery();
-  } catch (_) {
-    // erreur ignorée silencieusement ici
-  }
-});
+initGallery();

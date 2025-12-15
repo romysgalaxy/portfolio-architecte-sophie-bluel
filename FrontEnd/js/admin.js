@@ -1,32 +1,47 @@
-(function () {
-  const token = localStorage.getItem("token");
+export function initAdmin() {
+  // 1) On récupère le token dans le localStorage
+  var token = localStorage.getItem("token");
 
-  // garde ta logique admin pour afficher les éléments réservés
-  document.body.classList.toggle("is-admin", !!token);
+  // 2) On récupère le lien dans le menu (login / logout)
+  var authLink = document.getElementById("authLink");
 
-  // lien login/logout dans le menu
-  const authLink = document.getElementById("authLink");
-  if (!authLink) return;
+  // 3) Si le lien n'existe pas, on arrête (évite une erreur)
+  if (authLink === null) {
+    // rien à faire
+  } else {
 
-  if (!token) {
-    // Déconnecté -> login
-    authLink.textContent = "login";
-    authLink.setAttribute("href", "./login.html");
-    return;
+    // 4) Si token existe => utilisateur connecté
+    if (token !== null) {
+
+      // 4a) On ajoute la classe "is-admin" au body
+      document.body.classList.add("is-admin");
+
+      // 4b) Le lien devient "logout"
+      authLink.textContent = "logout";
+      authLink.href = "#";
+
+      // 4c) Quand on clique sur logout
+      authLink.addEventListener("click", function (event) {
+        event.preventDefault();
+
+        // 4d) On supprime les infos de connexion
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
+
+        // 4e) On retourne à la page d'accueil
+        window.location.href = "./index.html";
+      });
+
+    } else {
+      // 5) Sinon => utilisateur déconnecté
+
+      // 5a) On retire la classe "is-admin" du body
+      document.body.classList.remove("is-admin");
+
+      // 5b) Le lien devient "login"
+      authLink.textContent = "login";
+      authLink.href = "./login.html";
+    }
   }
-
-  // Connecté -> logout
-  authLink.textContent = "logout";
-  authLink.setAttribute("href", "#");
-
-  authLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-
-    // Optionnel: si tu stockes d’autres choses liées à la session, supprime-les aussi ici
-
-    // Retour à l'accueil (et mise à jour du menu + éléments admin)
-    window.location.href = "./index.html";
-  });
-})();
+}
+initAdmin();
