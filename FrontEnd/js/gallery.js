@@ -221,4 +221,3 @@ export function initGallery() {
   // Lance init quand la page est chargée
   document.addEventListener("DOMContentLoaded", init);
 }
-initGallery();

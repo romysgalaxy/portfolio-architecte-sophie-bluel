@@ -1,51 +1,34 @@
 export function initModal() {
-
-  // -------------------------
-  // CONFIG + BOUTON OUVRIR
-  // -------------------------
   var API = window.API_BASE;
 
   var openBtn = document.getElementById("openModalBtn");
-  var overlay = null;      // la modale (div overlay)
-  var previewURL = null;   // url temporaire pour preview image
+  var overlay = null;
+  var previewURL = null;
 
   if (openBtn !== null) {
     openBtn.addEventListener("click", function () {
       var token = localStorage.getItem("token");
-
-      // Si pas connecté, on renvoie au login
       if (token === null) {
         window.location.href = "./login.html";
         return;
       }
-
       openModal();
     });
   }
 
-
-  // -------------------------
-  // OUVRIR / FERMER MODALE
-  // -------------------------
   function openModal() {
-    // Si déjà ouverte, on ne la recrée pas
-    if (overlay !== null) {
-      return;
-    }
+    if (overlay !== null) return;
 
     overlay = buildModal();
     document.body.appendChild(overlay);
-    document.body.style.overflow = "hidden"; // bloque scroll
+    document.body.style.overflow = "hidden";
 
-    showGalleryView();
+    renderGalleryView();
   }
 
   function closeModal() {
-    if (overlay === null) {
-      return;
-    }
+    if (overlay === null) return;
 
-    // libère l'URL de preview si elle existe
     if (previewURL !== null) {
       URL.revokeObjectURL(previewURL);
       previewURL = null;
@@ -59,381 +42,384 @@ export function initModal() {
   }
 
   function onEscKey(event) {
-    if (event.key === "Escape") {
-      closeModal();
-    }
+    if (event.key === "Escape") closeModal();
   }
 
-
-  // -------------------------
-  // CONSTRUIRE LA MODALE HTML
-  // -------------------------
   function buildModal() {
+    // overlay
     var ov = document.createElement("div");
     ov.className = "modal-overlay";
 
+    // panel
     var panel = document.createElement("div");
     panel.className = "modal-panel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute("tabindex", "-1");
 
+    // close button (croix)
     var closeBtn = document.createElement("button");
     closeBtn.className = "modal-close";
     closeBtn.type = "button";
-    closeBtn.textContent = "X";
+    closeBtn.setAttribute("aria-label", "Fermer");
+    closeBtn.innerHTML = '<img src="./assets/icons/close.svg" alt="" aria-hidden="true">';
 
-    var title = document.createElement("h3");
-    title.id = "modalTitle";
-    title.textContent = "Galerie photo";
+    // header
+    var header = document.createElement("div");
+    header.className = "modal-header";
 
+    // back icon button (hidden by default)
+    var backIconBtn = document.createElement("button");
+    backIconBtn.className = "modal-back";
+    backIconBtn.type = "button";
+    backIconBtn.setAttribute("aria-label", "Retour");
+    backIconBtn.hidden = true;
+    backIconBtn.innerHTML = '<img src="./assets/icons/back.svg" alt="" aria-hidden="true">';
+
+    // title
+    var titleEl = document.createElement("h3");
+    titleEl.id = "modal-title";
+    titleEl.textContent = "Galerie photo";
+
+    header.appendChild(backIconBtn);
+    header.appendChild(titleEl);
+
+    // body
     var body = document.createElement("div");
     body.className = "modal-body";
 
+    // footer
     var footer = document.createElement("div");
     footer.className = "modal-footer";
 
-    var addBtn = document.createElement("button");
-    addBtn.type = "button";
-    addBtn.id = "modalAddBtn";
-    addBtn.textContent = "Ajouter une photo";
-
+    // footer back button (hidden by default)
     var backBtn = document.createElement("button");
+    backBtn.className = "btn btn-secondary";
+    backBtn.id = "modalBack";
     backBtn.type = "button";
-    backBtn.id = "modalBackBtn";
-    backBtn.textContent = "Retour";
-    backBtn.style.display = "none";
+    backBtn.textContent = "← Retour";
+    backBtn.hidden = true;
+
+    // footer next button
+    var nextBtn = document.createElement("button");
+    nextBtn.className = "btn btn-primary";
+    nextBtn.id = "modalNext";
+    nextBtn.type = "button";
+    nextBtn.textContent = "Ajouter une photo";
 
     footer.appendChild(backBtn);
-    footer.appendChild(addBtn);
+    footer.appendChild(nextBtn);
 
     panel.appendChild(closeBtn);
-    panel.appendChild(title);
+    panel.appendChild(header);
     panel.appendChild(body);
     panel.appendChild(footer);
     ov.appendChild(panel);
 
-    // fermer avec la croix
-    closeBtn.addEventListener("click", function () {
-      closeModal();
+    // close events
+    closeBtn.addEventListener("click", closeModal);
+    ov.addEventListener("click", function (e) {
+      if (e.target === ov) closeModal();
     });
-
-    // fermer si clic en dehors du panel
-    ov.addEventListener("click", function (event) {
-      if (event.target === ov) {
-        closeModal();
-      }
-    });
-
-    // fermer avec Escape
     document.addEventListener("keydown", onEscKey);
 
-    // navigation vues
-    addBtn.addEventListener("click", function () {
-      showUploadView();
-    });
+    // navigation
+    nextBtn.addEventListener("click", renderUploadView);
+    backBtn.addEventListener("click", renderGalleryView);
+    backIconBtn.addEventListener("click", renderGalleryView);
 
-    backBtn.addEventListener("click", function () {
-      showGalleryView();
-    });
-
-    // on stocke les éléments utiles directement sur ov
+    // store refs
     ov._panel = panel;
-    ov._title = title;
+    ov._title = titleEl;
     ov._body = body;
     ov._footer = footer;
-    ov._addBtn = addBtn;
     ov._backBtn = backBtn;
+    ov._nextBtn = nextBtn;
+    ov._backIcon = backIconBtn;
+
+    // focus (simple)
+    setTimeout(function () {
+      panel.focus();
+    }, 0);
 
     return ov;
   }
 
-
   // -------------------------
-  // VUE 1 : GALERIE + SUPPR
+  // VUE 1 : GALERIE
   // -------------------------
-  function showGalleryView() {
+  function renderGalleryView() {
     if (overlay === null) return;
 
     overlay._title.textContent = "Galerie photo";
-    overlay._addBtn.style.display = "";
-    overlay._backBtn.style.display = "none";
+    overlay._backIcon.hidden = true;
+    overlay._backBtn.hidden = true;
+    overlay._nextBtn.hidden = false;
 
-    overlay._body.innerHTML = "Chargement...";
+    // footer : uniquement "Ajouter une photo"
+    overlay._footer.innerHTML = "";
+    overlay._footer.appendChild(overlay._nextBtn);
 
-    fetch(API + "/works")
+    // loading
+    overlay._body.innerHTML = '<div class="modal-grid" id="modalGrid">Chargement…</div>';
+    var grid = overlay._body.querySelector("#modalGrid");
+
+    fetch(API + "/works", { headers: { Accept: "application/json" } })
       .then(function (response) {
         if (response.ok === false) {
-          overlay._body.innerHTML = "Impossible de charger la galerie.";
+          grid.textContent = "Impossible de charger la galerie.";
           return null;
         }
         return response.json();
       })
-      .then(function (data) {
-        if (data === null) return;
+      .then(function (works) {
+        if (works === null) return;
 
-        // on construit le HTML simple
-        overlay._body.innerHTML = "";
-        var grid = document.createElement("div");
-        grid.className = "modal-grid";
-        overlay._body.appendChild(grid);
+        grid.innerHTML = "";
 
-        for (var i = 0; i < data.length; i++) {
-          createWorkMiniature(grid, data[i]);
+        for (var i = 0; i < works.length; i++) {
+          createMiniature(grid, works[i]);
         }
       })
       .catch(function (error) {
         console.error(error);
-        overlay._body.innerHTML = "Impossible de charger la galerie.";
+        grid.textContent = "Impossible de charger la galerie.";
       });
   }
 
-  function createWorkMiniature(container, work) {
+  function createMiniature(grid, work) {
     var fig = document.createElement("figure");
 
-    var img = document.createElement("img");
-    img.src = work.imageUrl;
-    img.alt = work.title || "";
+    // reprend le HTML du projet initial (classes + bouton .del + svg)
+    fig.innerHTML =
+      '<img src="' + work.imageUrl + '" alt="' + (work.title || "") + '">' +
+      "<figcaption>" + (work.title || "") + "</figcaption>" +
+      '<button class="del" type="button" aria-label="Supprimer">' +
+      '  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+      '    <path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1zm1 2h4V5h-4zM7 7v12h10V7H7zm3 2h2v8h-2V9zm4 0h2v8h-2V9z"/>' +
+      "  </svg>" +
+      "</button>";
 
-    var cap = document.createElement("figcaption");
-    cap.textContent = work.title || "";
+    var delBtn = fig.querySelector(".del");
+    delBtn.addEventListener("click", function (e) {
+      e.preventDefault();
 
-    var delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.textContent = "Supprimer";
+      if (confirm("Supprimer ce média ?") === false) return;
 
-    delBtn.addEventListener("click", function (event) {
-      event.preventDefault();
+      var token = localStorage.getItem("token");
 
-      var ok = window.confirm("Supprimer ce média ?");
-      if (ok === false) return;
-
-      deleteWork(work.id, fig);
+      fetch(API + "/works/" + work.id, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      })
+        .then(function (response) {
+          if (response.ok === false) {
+            alert("Suppression impossible.");
+            return;
+          }
+          fig.remove();
+          reloadMainGallery();
+        })
+        .catch(function (error) {
+          console.error(error);
+          alert("Suppression impossible.");
+        });
     });
 
-    fig.appendChild(img);
-    fig.appendChild(cap);
-    fig.appendChild(delBtn);
-    container.appendChild(fig);
+    grid.appendChild(fig);
   }
 
-  function deleteWork(id, figureElement) {
-    var token = localStorage.getItem("token");
-
-    fetch(API + "/works/" + id, {
-      method: "DELETE",
-      headers: {
-        Authorization: "Bearer " + token
-      }
-    })
-      .then(function (response) {
-        if (response.ok === false) {
-          alert("Suppression impossible.");
-          return;
-        }
-
-        // retire la miniature de la modale
-        figureElement.remove();
-
-        // rafraîchit la galerie principale
-        reloadMainGallery();
-      })
-      .catch(function (error) {
-        console.error(error);
-        alert("Suppression impossible.");
-      });
-  }
-
-
   // -------------------------
-  // VUE 2 : AJOUT (FORM)
+  // VUE 2 : UPLOAD
   // -------------------------
-  function showUploadView() {
+  function renderUploadView() {
     if (overlay === null) return;
 
     overlay._title.textContent = "Ajout photo";
-    overlay._addBtn.style.display = "none";
-    overlay._backBtn.style.display = "";
+    overlay._backIcon.hidden = false;
+    overlay._backBtn.hidden = true;
+    overlay._nextBtn.hidden = true;
 
-    // Formulaire simple
+    // footer : uniquement "Valider" (btn btn-primary)
+    overlay._footer.innerHTML = "";
+    var submitBtn = document.createElement("button");
+    submitBtn.className = "btn btn-primary";
+    submitBtn.type = "submit";
+    submitBtn.setAttribute("form", "uploadForm");
+    submitBtn.textContent = "Valider";
+    overlay._footer.appendChild(submitBtn);
+
+    // reprend les classes HTML du projet initial
     overlay._body.innerHTML =
-      '<form id="uploadForm">' +
-      '  <p id="uploadError" hidden></p>' +
-      '  <div>' +
-      '    <label>Image (jpg/png, 4 Mo max)</label><br>' +
-      '    <input id="fileInput" type="file" accept="image/jpeg,image/png">' +
-      '    <br><img id="previewImg" alt="" style="display:none; max-width:150px;">' +
+      '<form id="uploadForm" novalidate>' +
+      '  <div class="dropzone">' +
+      '    <img src="./assets/icons/img.svg" alt="" class="dropzone-icon" aria-hidden="true">' +
+      '    <img class="preview" id="previewImg" alt="">' +
+      '    <input id="fileInput" name="image" type="file" accept="image/png,image/jpeg" hidden>' +
+      '    <button class="pick" type="button" id="pickBtn">+ Ajouter une photo</button>' +
+      '    <p id="dropHint">jpg, png • 4 Mo max</p>' +
       "  </div>" +
-      '  <div>' +
-      '    <label>Titre</label><br>' +
-      '    <input id="titleInput" type="text">' +
+      '  <div class="form-row">' +
+      '    <label for="titleInput">Titre</label>' +
+      '    <input id="titleInput" name="title" type="text" required>' +
       "  </div>" +
-      '  <div>' +
-      '    <label>Catégorie</label><br>' +
-      '    <select id="catSelect">' +
-      '      <option value="">Choisir...</option>' +
+      '  <div class="form-row">' +
+      '    <label for="catSelect">Catégorie</label>' +
+      '    <select id="catSelect" name="category" required>' +
+      '      <option value="" disabled selected>Choisir…</option>' +
       "    </select>" +
       "  </div>" +
-      '  <button id="submitBtn" type="submit">Valider</button>' +
+      '  <p id="uploadError" class="form-error" role="alert" hidden></p>' +
       "</form>";
-
-    // Remplir les catégories
-    fillCategories();
 
     var form = overlay._body.querySelector("#uploadForm");
     var fileInput = overlay._body.querySelector("#fileInput");
+    var pickBtn = overlay._body.querySelector("#pickBtn");
+    var previewImg = overlay._body.querySelector("#previewImg");
+    var icon = overlay._body.querySelector(".dropzone-icon");
+    var hint = overlay._body.querySelector("#dropHint");
+
     var titleInput = overlay._body.querySelector("#titleInput");
     var catSelect = overlay._body.querySelector("#catSelect");
     var errorBox = overlay._body.querySelector("#uploadError");
-    var previewImg = overlay._body.querySelector("#previewImg");
 
-    // preview image
+    // Remplir catégories
+    fillCategories(catSelect);
+
+    // Ouvrir le sélecteur de fichier
+    pickBtn.addEventListener("click", function () {
+      fileInput.click();
+    });
+
+    // Gestion erreurs
+    function showErr(msg) {
+      errorBox.textContent = msg;
+      errorBox.hidden = (msg === "");
+    }
+
+    function clearErr() {
+      showErr("");
+    }
+
+    // Preview + validation simple fichier
     fileInput.addEventListener("change", function () {
-      var file = fileInput.files[0];
+      clearErr();
 
+      var file = fileInput.files[0];
       if (!file) {
-        hidePreview(previewImg);
+        resetPreview();
         return;
       }
 
-      // validation simple
       if (file.size > 4 * 1024 * 1024) {
         fileInput.value = "";
-        showUploadError(errorBox, "Image trop lourde (> 4 Mo).");
-        hidePreview(previewImg);
+        showErr("Image trop lourde (> 4 Mo).");
+        resetPreview();
         return;
       }
 
       if (file.type !== "image/jpeg" && file.type !== "image/png") {
         fileInput.value = "";
-        showUploadError(errorBox, "Formats autorisés : JPG ou PNG.");
-        hidePreview(previewImg);
+        showErr("Formats autorisés : JPG ou PNG.");
+        resetPreview();
         return;
       }
 
-      clearUploadError(errorBox);
-      showPreview(previewImg, file);
+      setPreview(file);
     });
 
-    // submit
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-      clearUploadError(errorBox);
+    function setPreview(file) {
+      if (previewURL !== null) {
+        URL.revokeObjectURL(previewURL);
+        previewURL = null;
+      }
+
+      previewURL = URL.createObjectURL(file);
+      previewImg.src = previewURL;
+      previewImg.style.display = "block";
+
+      if (icon) icon.style.display = "none";
+      if (pickBtn) pickBtn.style.display = "none";
+      if (hint) hint.style.display = "none";
+    }
+
+    function resetPreview() {
+      if (previewURL !== null) {
+        URL.revokeObjectURL(previewURL);
+        previewURL = null;
+      }
+      previewImg.removeAttribute("src");
+      previewImg.style.display = "none";
+
+      if (icon) icon.style.display = "";
+      if (pickBtn) pickBtn.style.display = "";
+      if (hint) hint.style.display = "";
+    }
+
+    // Submit
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      clearErr();
 
       var file = fileInput.files[0];
       var title = titleInput.value.trim();
       var category = catSelect.value;
 
-      // validation simple
-      if (!file) {
-        showUploadError(errorBox, "Choisis une image.");
-        return;
-      }
-      if (title === "") {
-        showUploadError(errorBox, "Le titre est obligatoire.");
-        return;
-      }
-      if (category === "") {
-        showUploadError(errorBox, "Choisis une catégorie.");
-        return;
-      }
+      if (!file) return showErr("Choisis une image JPG/PNG ≤ 4 Mo.");
+      if (title === "") return showErr("Le titre est obligatoire.");
+      if (category === "" || category === null) return showErr("Choisis une catégorie.");
 
-      // envoi
-      uploadWork(file, title, category, errorBox);
+      var token = localStorage.getItem("token");
+
+      var formData = new FormData();
+      formData.append("image", file);
+      formData.append("title", title);
+      formData.append("category", category);
+
+      fetch(API + "/works", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token },
+        body: formData
+      })
+        .then(function (response) {
+          if (response.ok === false) {
+            if (response.status === 400) return showErr("Formulaire incomplet.");
+            if (response.status === 401) return showErr("Non autorisé (token expiré).");
+            return showErr("Erreur (" + response.status + ").");
+          }
+
+          // succès
+          reloadMainGallery();
+          renderGalleryView();
+        })
+        .catch(function (error) {
+          console.error(error);
+          showErr("Échec de l'envoi. Réessaie.");
+        });
     });
   }
 
-  function showPreview(previewImg, file) {
-    if (previewURL !== null) {
-      URL.revokeObjectURL(previewURL);
-      previewURL = null;
-    }
-    previewURL = URL.createObjectURL(file);
-    previewImg.src = previewURL;
-    previewImg.style.display = "block";
-  }
-
-  function hidePreview(previewImg) {
-    if (previewURL !== null) {
-      URL.revokeObjectURL(previewURL);
-      previewURL = null;
-    }
-    previewImg.removeAttribute("src");
-    previewImg.style.display = "none";
-  }
-
-  function showUploadError(errorBox, message) {
-    errorBox.textContent = message;
-    errorBox.hidden = false;
-  }
-
-  function clearUploadError(errorBox) {
-    errorBox.textContent = "";
-    errorBox.hidden = true;
-  }
-
-  function fillCategories() {
-    fetch(API + "/categories")
+  function fillCategories(selectEl) {
+    fetch(API + "/categories", { headers: { Accept: "application/json" } })
       .then(function (response) {
         if (response.ok === false) return null;
         return response.json();
       })
       .then(function (cats) {
-        if (cats === null || overlay === null) return;
+        if (cats === null) return;
 
-        var select = overlay._body.querySelector("#catSelect");
-        if (select === null) return;
-
+        // Ajoute les <option>
         for (var i = 0; i < cats.length; i++) {
-          var option = document.createElement("option");
-          option.value = String(cats[i].id);
-          option.textContent = cats[i].name;
-          select.appendChild(option);
+          var opt = document.createElement("option");
+          opt.value = String(cats[i].id);
+          opt.textContent = cats[i].name;
+          selectEl.appendChild(opt);
         }
       })
       .catch(function (error) {
         console.error(error);
       });
   }
-
-  function uploadWork(file, title, category, errorBox) {
-    var token = localStorage.getItem("token");
-
-    var formData = new FormData();
-    formData.append("image", file);
-    formData.append("title", title);
-    formData.append("category", category);
-
-    fetch(API + "/works", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + token
-      },
-      body: formData
-    })
-      .then(function (response) {
-        if (response.ok === false) {
-          if (response.status === 401) {
-            showUploadError(errorBox, "Non autorisé (token expiré).");
-            return null;
-          }
-          showUploadError(errorBox, "Erreur (" + response.status + ").");
-          return null;
-        }
-        return response.json();
-      })
-      .then(function (createdWork) {
-        if (createdWork === null) return;
-
-        // rafraîchit la galerie principale
-        reloadMainGallery();
-
-        // retour vue galerie dans la modale
-        showGalleryView();
-      })
-      .catch(function (error) {
-        console.error(error);
-        showUploadError(errorBox, "Échec de l'envoi. Réessaie.");
-      });
-  }
-
 
   // -------------------------
   // RAFRAÎCHIR GALERIE PAGE
@@ -442,7 +428,7 @@ export function initModal() {
     var mainGallery = document.getElementById("gallery");
     if (mainGallery === null) return;
 
-    fetch(API + "/works")
+    fetch(API + "/works", { headers: { Accept: "application/json" } })
       .then(function (response) {
         if (response.ok === false) return null;
         return response.json();
