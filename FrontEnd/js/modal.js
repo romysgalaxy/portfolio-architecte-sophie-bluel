@@ -365,9 +365,21 @@ export function initModal() {
       var title = titleInput.value.trim();
       var category = catSelect.value;
 
-      if (!file) return showErr("Choisis une image JPG/PNG ≤ 4 Mo.");
-      if (title === "") return showErr("Le titre est obligatoire.");
-      if (category === "" || category === null) return showErr("Choisis une catégorie.");
+      if (file === undefined) {
+        showErr("Choisis une image JPG/PNG ≤ 4 Mo.");
+        return;
+      }
+
+      if (title === "") {
+        showErr("Le titre est obligatoire.");
+        return;
+      }
+
+      if (category === "" || category === null) {
+        showErr("Choisis une catégorie.");
+        return;
+      }
+
 
       var token = localStorage.getItem("token");
 

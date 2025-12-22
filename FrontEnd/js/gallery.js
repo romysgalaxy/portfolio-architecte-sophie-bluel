@@ -113,7 +113,6 @@ export function initGallery() {
 
   // =======================
   // CRÉER LA LISTE DES CATÉGORIES
-  // (sans Map, très simple)
   // =======================
   function buildCategoriesFromWorks() {
     categories = [];
@@ -155,7 +154,6 @@ export function initGallery() {
   // AFFICHER UNE ERREUR UTILISATEUR
   // =======================
   function showUserError(message) {
-    // Tu peux personnaliser : ici on met un texte simple dans le menu et la galerie
     menuEl.textContent = message;
     galleryEl.textContent = message;
   }
@@ -190,7 +188,7 @@ export function initGallery() {
       })
       .catch(function (error) {
         console.error(error);
-        showUserError("Impossible de charger la galerie. Vérifie le serveur.");
+        showUserError("Impossible de charger la galerie.");
       });
 
     // Gestion du clic sur les boutons du menu (délégation)
@@ -220,4 +218,5 @@ export function initGallery() {
 
   // Lance init quand la page est chargée
   document.addEventListener("DOMContentLoaded", init);
+  
 }
