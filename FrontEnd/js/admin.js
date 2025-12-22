@@ -1,9 +1,9 @@
 export function initAdmin() {
   // 1) On récupère le token dans le localStorage
-  var token = localStorage.getItem("token");
+  let token = localStorage.getItem("token");
 
   // 2) On récupère le lien dans le menu (login / logout)
-  var authLink = document.getElementById("authLink");
+  let authLink = document.getElementById("authLink");
 
   // 3) Si authLink existe
   if (token !== null) {

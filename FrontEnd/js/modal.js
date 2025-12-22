@@ -1,13 +1,13 @@
 export function initModal() {
-  var API = window.API_BASE;
+  let API = window.API_BASE;
 
-  var openBtn = document.getElementById("openModalBtn");
-  var overlay = null;
-  var previewURL = null;
+  let openBtn = document.getElementById("openModalBtn");
+  let overlay = null;
+  let previewURL = null;
 
   if (openBtn !== null) {
     openBtn.addEventListener("click", function () {
-      var token = localStorage.getItem("token");
+      let token = localStorage.getItem("token");
       if (token === null) {
         window.location.href = "./login.html";
         return;
@@ -47,29 +47,29 @@ export function initModal() {
 
   function buildModal() {
     // overlay
-    var ov = document.createElement("div");
+    let ov = document.createElement("div");
     ov.className = "modal-overlay";
 
     // panel
-    var panel = document.createElement("div");
+    let panel = document.createElement("div");
     panel.className = "modal-panel";
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "true");
     panel.setAttribute("tabindex", "-1");
 
     // close button (croix)
-    var closeBtn = document.createElement("button");
+    let closeBtn = document.createElement("button");
     closeBtn.className = "modal-close";
     closeBtn.type = "button";
     closeBtn.setAttribute("aria-label", "Fermer");
     closeBtn.innerHTML = '<img src="./assets/icons/close.svg" alt="" aria-hidden="true">';
 
     // header
-    var header = document.createElement("div");
+    let header = document.createElement("div");
     header.className = "modal-header";
 
     // back icon button (hidden by default)
-    var backIconBtn = document.createElement("button");
+    let backIconBtn = document.createElement("button");
     backIconBtn.className = "modal-back";
     backIconBtn.type = "button";
     backIconBtn.setAttribute("aria-label", "Retour");
@@ -77,7 +77,7 @@ export function initModal() {
     backIconBtn.innerHTML = '<img src="./assets/icons/back.svg" alt="" aria-hidden="true">';
 
     // title
-    var titleEl = document.createElement("h3");
+    let titleEl = document.createElement("h3");
     titleEl.id = "modal-title";
     titleEl.textContent = "Galerie photo";
 
@@ -85,15 +85,15 @@ export function initModal() {
     header.appendChild(titleEl);
 
     // body
-    var body = document.createElement("div");
+    let body = document.createElement("div");
     body.className = "modal-body";
 
     // footer
-    var footer = document.createElement("div");
+    let footer = document.createElement("div");
     footer.className = "modal-footer";
 
     // footer back button (hidden by default)
-    var backBtn = document.createElement("button");
+    let backBtn = document.createElement("button");
     backBtn.className = "btn btn-secondary";
     backBtn.id = "modalBack";
     backBtn.type = "button";
@@ -101,7 +101,7 @@ export function initModal() {
     backBtn.hidden = true;
 
     // footer next button
-    var nextBtn = document.createElement("button");
+    let nextBtn = document.createElement("button");
     nextBtn.className = "btn btn-primary";
     nextBtn.id = "modalNext";
     nextBtn.type = "button";
@@ -162,7 +162,7 @@ export function initModal() {
 
     // loading
     overlay._body.innerHTML = '<div class="modal-grid" id="modalGrid">Chargement…</div>';
-    var grid = overlay._body.querySelector("#modalGrid");
+    let grid = overlay._body.querySelector("#modalGrid");
 
     fetch(API + "/works", { headers: { Accept: "application/json" } })
       .then(function (response) {
@@ -177,7 +177,7 @@ export function initModal() {
 
         grid.innerHTML = "";
 
-        for (var i = 0; i < works.length; i++) {
+        for (let i = 0; i < works.length; i++) {
           createMiniature(grid, works[i]);
         }
       })
@@ -188,7 +188,7 @@ export function initModal() {
   }
 
   function createMiniature(grid, work) {
-    var fig = document.createElement("figure");
+    let fig = document.createElement("figure");
 
     // reprend le HTML du projet initial (classes + bouton .del + svg)
     fig.innerHTML =
@@ -200,13 +200,13 @@ export function initModal() {
       "  </svg>" +
       "</button>";
 
-    var delBtn = fig.querySelector(".del");
+    let delBtn = fig.querySelector(".del");
     delBtn.addEventListener("click", function (e) {
       e.preventDefault();
 
       if (confirm("Supprimer ce média ?") === false) return;
 
-      var token = localStorage.getItem("token");
+      let token = localStorage.getItem("token");
 
       fetch(API + "/works/" + work.id, {
         method: "DELETE",
@@ -242,7 +242,7 @@ export function initModal() {
 
     // footer : uniquement "Valider" (btn btn-primary)
     overlay._footer.innerHTML = "";
-    var submitBtn = document.createElement("button");
+    let submitBtn = document.createElement("button");
     submitBtn.className = "btn btn-primary";
     submitBtn.type = "submit";
     submitBtn.setAttribute("form", "uploadForm");
@@ -272,16 +272,16 @@ export function initModal() {
       '  <p id="uploadError" class="form-error" role="alert" hidden></p>' +
       "</form>";
 
-    var form = overlay._body.querySelector("#uploadForm");
-    var fileInput = overlay._body.querySelector("#fileInput");
-    var pickBtn = overlay._body.querySelector("#pickBtn");
-    var previewImg = overlay._body.querySelector("#previewImg");
-    var icon = overlay._body.querySelector(".dropzone-icon");
-    var hint = overlay._body.querySelector("#dropHint");
+    let form = overlay._body.querySelector("#uploadForm");
+    let fileInput = overlay._body.querySelector("#fileInput");
+    let pickBtn = overlay._body.querySelector("#pickBtn");
+    let previewImg = overlay._body.querySelector("#previewImg");
+    let icon = overlay._body.querySelector(".dropzone-icon");
+    let hint = overlay._body.querySelector("#dropHint");
 
-    var titleInput = overlay._body.querySelector("#titleInput");
-    var catSelect = overlay._body.querySelector("#catSelect");
-    var errorBox = overlay._body.querySelector("#uploadError");
+    let titleInput = overlay._body.querySelector("#titleInput");
+    let catSelect = overlay._body.querySelector("#catSelect");
+    let errorBox = overlay._body.querySelector("#uploadError");
 
     // Remplir catégories
     fillCategories(catSelect);
@@ -305,7 +305,7 @@ export function initModal() {
     fileInput.addEventListener("change", function () {
       clearErr();
 
-      var file = fileInput.files[0];
+      let file = fileInput.files[0];
       if (!file) {
         resetPreview();
         return;
@@ -361,9 +361,9 @@ export function initModal() {
       e.preventDefault();
       clearErr();
 
-      var file = fileInput.files[0];
-      var title = titleInput.value.trim();
-      var category = catSelect.value;
+      let file = fileInput.files[0];
+      let title = titleInput.value.trim();
+      let category = catSelect.value;
 
       if (file === undefined) {
         showErr("Choisis une image JPG/PNG ≤ 4 Mo.");
@@ -381,9 +381,9 @@ export function initModal() {
       }
 
 
-      var token = localStorage.getItem("token");
+      let token = localStorage.getItem("token");
 
-      var formData = new FormData();
+      let formData = new FormData();
       formData.append("image", file);
       formData.append("title", title);
       formData.append("category", category);
@@ -421,8 +421,8 @@ export function initModal() {
         if (cats === null) return;
 
         // Ajoute les <option>
-        for (var i = 0; i < cats.length; i++) {
-          var opt = document.createElement("option");
+        for (let i = 0; i < cats.length; i++) {
+          let opt = document.createElement("option");
           opt.value = String(cats[i].id);
           opt.textContent = cats[i].name;
           selectEl.appendChild(opt);
@@ -437,7 +437,7 @@ export function initModal() {
   // RAFRAÎCHIR GALERIE PAGE
   // -------------------------
   function reloadMainGallery() {
-    var mainGallery = document.getElementById("gallery");
+    let mainGallery = document.getElementById("gallery");
     if (mainGallery === null) return;
 
     fetch(API + "/works", { headers: { Accept: "application/json" } })
@@ -450,16 +450,16 @@ export function initModal() {
 
         mainGallery.innerHTML = "";
 
-        for (var i = 0; i < data.length; i++) {
-          var work = data[i];
+        for (let i = 0; i < data.length; i++) {
+          let work = data[i];
 
-          var fig = document.createElement("figure");
+          let fig = document.createElement("figure");
 
-          var img = document.createElement("img");
+          let img = document.createElement("img");
           img.src = work.imageUrl;
           img.alt = work.title || "";
 
-          var cap = document.createElement("figcaption");
+          let cap = document.createElement("figcaption");
           cap.textContent = work.title || "";
 
           fig.appendChild(img);

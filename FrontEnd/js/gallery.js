@@ -1,15 +1,15 @@
 export function initGallery() {
   // 1) URL de base de l'API
-  var API = window.API_BASE;
+  let API = window.API_BASE;
 
   // 2) Éléments HTML
-  var galleryEl = document.getElementById("gallery");
-  var menuEl = document.getElementById("categoryMenu");
+  let galleryEl = document.getElementById("gallery");
+  let menuEl = document.getElementById("categoryMenu");
 
   // 3) Données en mémoire
-  var works = [];        // tous les projets
-  var categories = [];   // catégories trouvées
-  var currentCategoryId = 0; // 0 = Tous
+  let works = [];        // tous les projets
+  let categories = [];   // catégories trouvées
+  let currentCategoryId = 0; // 0 = Tous
 
 
   // =======================
@@ -20,11 +20,11 @@ export function initGallery() {
     galleryEl.innerHTML = "";
 
     // On parcourt tous les works
-    for (var i = 0; i < works.length; i++) {
-      var work = works[i];
+    for (let i = 0; i < works.length; i++) {
+      let work = works[i];
 
       // On récupère l'id de catégorie du work
-      var workCategoryId = 0;
+      let workCategoryId = 0;
 
       // Certains works ont work.category.id
       if (work.category && work.category.id) {
@@ -42,13 +42,13 @@ export function initGallery() {
       }
 
       // Création du HTML : figure -> img + figcaption
-      var figure = document.createElement("figure");
+      let figure = document.createElement("figure");
 
-      var img = document.createElement("img");
+      let img = document.createElement("img");
       img.src = work.imageUrl;
       img.alt = work.title;
 
-      var caption = document.createElement("figcaption");
+      let caption = document.createElement("figcaption");
       caption.textContent = work.title;
 
       figure.appendChild(img);
@@ -67,7 +67,7 @@ export function initGallery() {
     menuEl.innerHTML = "";
 
     // Bouton "Tous"
-    var allButton = document.createElement("button");
+    let allButton = document.createElement("button");
     allButton.type = "button";
     allButton.className = "filter-btn";
     allButton.textContent = "Tous";
@@ -75,10 +75,10 @@ export function initGallery() {
     menuEl.appendChild(allButton);
 
     // Boutons des catégories
-    for (var i = 0; i < categories.length; i++) {
-      var cat = categories[i];
+    for (let i = 0; i < categories.length; i++) {
+      let cat = categories[i];
 
-      var btn = document.createElement("button");
+      let btn = document.createElement("button");
       btn.type = "button";
       btn.className = "filter-btn";
       btn.textContent = cat.name;
@@ -96,11 +96,11 @@ export function initGallery() {
   // BOUTON ACTIF (CSS)
   // =======================
   function updateActiveButton() {
-    var buttons = menuEl.querySelectorAll(".filter-btn");
+    let buttons = menuEl.querySelectorAll(".filter-btn");
 
-    for (var i = 0; i < buttons.length; i++) {
-      var b = buttons[i];
-      var id = Number(b.getAttribute("data-cat"));
+    for (let i = 0; i < buttons.length; i++) {
+      let b = buttons[i];
+      let id = Number(b.getAttribute("data-cat"));
 
       if (id === currentCategoryId) {
         b.classList.add("active");
@@ -117,11 +117,11 @@ export function initGallery() {
   function buildCategoriesFromWorks() {
     categories = [];
 
-    for (var i = 0; i < works.length; i++) {
-      var work = works[i];
+    for (let i = 0; i < works.length; i++) {
+      let work = works[i];
 
-      var id = 0;
-      var name = "";
+      let id = 0;
+      let name = "";
 
       if (work.category && work.category.id && work.category.name) {
         id = work.category.id;
@@ -135,8 +135,8 @@ export function initGallery() {
       }
 
       // Vérifie si la catégorie existe déjà dans categories
-      var exists = false;
-      for (var j = 0; j < categories.length; j++) {
+      let exists = false;
+      for (let j = 0; j < categories.length; j++) {
         if (categories[j].id === id) {
           exists = true;
         }
@@ -193,7 +193,7 @@ export function initGallery() {
 
     // Gestion du clic sur les boutons du menu (délégation)
     menuEl.addEventListener("click", function (event) {
-      var target = event.target;
+      let target = event.target;
 
       // On vérifie que c'est un bouton
       if (target.tagName !== "BUTTON") {
@@ -201,7 +201,7 @@ export function initGallery() {
       }
 
       // Récupère la catégorie du bouton
-      var id = Number(target.getAttribute("data-cat"));
+      let id = Number(target.getAttribute("data-cat"));
       if (isNaN(id)) {
         return;
       }

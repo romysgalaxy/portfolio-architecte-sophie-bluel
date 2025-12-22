@@ -1,12 +1,12 @@
 export function initLogin() {
   // 1) URL de base de l'API
-  var API = window.API_BASE;
+  let API = window.API_BASE;
 
   // 2) On récupère les éléments du formulaire dans le HTML
-  var form = document.getElementById("loginForm");
-  var emailInput = document.getElementById("email");
-  var passwordInput = document.getElementById("password");
-  var errorBox = document.getElementById("loginError");
+  let form = document.getElementById("loginForm");
+  let emailInput = document.getElementById("email");
+  let passwordInput = document.getElementById("password");
+  let errorBox = document.getElementById("loginError");
 
   // 3) Fonction pour afficher un message d'erreur sous le formulaire
   function showError(message) {
@@ -32,8 +32,8 @@ export function initLogin() {
       clearError(); // enlève l'erreur précédente
 
       // 6) On récupère les valeurs saisies
-      var email = emailInput.value.trim();
-      var password = passwordInput.value;
+      let email = emailInput.value.trim();
+      let password = passwordInput.value;
 
       // 7) Vérification : les champs doivent être remplis
       if (email === "" || password === "") {
@@ -42,7 +42,7 @@ export function initLogin() {
       }
 
       // 8) On prépare les données à envoyer à l'API
-      var bodyData = JSON.stringify({
+      let bodyData = JSON.stringify({
         email: email,
         password: password
       });
