@@ -218,7 +218,8 @@ export function initModal() {
             return;
           }
           fig.remove();
-          reloadMainGallery();
+          if (window.reloadGallery) window.reloadGallery();
+          else reloadMainGallery();
         })
         .catch(function (error) {
           console.error(error);
@@ -401,7 +402,8 @@ export function initModal() {
           }
 
           // succès
-          reloadMainGallery();
+          if (window.reloadGallery) window.reloadGallery();
+          else reloadMainGallery();
           renderGalleryView();
         })
         .catch(function (error) {

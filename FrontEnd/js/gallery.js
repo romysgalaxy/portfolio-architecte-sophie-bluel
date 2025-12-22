@@ -149,6 +149,47 @@ export function initGallery() {
     }
   }
 
+  // =======================
+  // RELOAD DE LA GALERIE
+  // =======================
+  function reloadGallery() {
+    return fetch(API + "/works")
+      .then(function (response) {
+        if (response.ok === false) {
+          showUserError("Impossible de recharger la galerie (erreur " + response.status + ").");
+          return null;
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (data === null) return;
+
+        works = data;
+
+        // Rebuild catégories
+        buildCategoriesFromWorks();
+
+        // Si la catégorie courante n'existe plus, on revient à "Tous"
+        if (currentCategoryId !== 0) {
+          let stillExists = false;
+          for (let i = 0; i < categories.length; i++) {
+            if (categories[i].id === currentCategoryId) stillExists = true;
+          }
+          if (stillExists === false) currentCategoryId = 0;
+        }
+
+        showMenu();
+        showGallery();
+      })
+      .catch(function (error) {
+        console.error(error);
+        showUserError("Impossible de recharger la galerie.");
+      });
+  }
+
+  // rend la fonction accessible depuis modal.js
+  window.reloadGallery = reloadGallery;
+
 
   // =======================
   // AFFICHER UNE ERREUR UTILISATEUR
@@ -218,5 +259,5 @@ export function initGallery() {
 
   // Lance init quand la page est chargée
   document.addEventListener("DOMContentLoaded", init);
-  
+
 }
